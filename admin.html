@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - The Oruro inn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #3b82f6; --dark: #0f172a; --bg: #f8fafc; --card: #fff; --border: #e2e8f0; --text: #334155; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); }
+        .header { background:var(--card); padding:20px 40px; box-shadow:0 1px 3px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
+        .header h1 { font-size:1.5rem; color:var(--dark); }
+        .container { max-width:900px; margin:30px auto; padding:0 20px; }
+        .main-content { display:none; }
+        .main-content.active { display:block; }
+        .card { background:var(--card); border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom:25px; }
+        .card h2 { font-size:1.25rem; margin-bottom:20px; color:var(--dark); display:flex; align-items:center; gap:10px; }
+        .form-group { margin-bottom:15px; }
+        .form-group label { display:block; font-weight:600; margin-bottom:8px; font-size:0.9rem; }
+        .form-group input, .form-group textarea { width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.95rem; }
+        .form-group input:focus, .form-group textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+        .btn { padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer; border:none; transition:0.2s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-primary { background:var(--primary); color:#fff; }
+        .btn-primary:hover { background:#2563eb; }
+        .btn-danger { background:#ef4444; color:#fff; padding:6px 12px; font-size:0.85rem; }
+        .btn-danger:hover { background:#dc2828; }
+        .btn-secondary { background:#e2e8f0; color:var(--text); }
+        .btn-secondary:hover { background:#cbd5e1; }
+        .save-bar { position:fixed; bottom:0; left:0; right:0; background:#fff; padding:15px 40px; box-shadow:0 -4px 6px -1px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center; z-index:100; }
+        .save-message { font-weight:600; color:#10b981; opacity:0; transition:opacity 0.3s; }
+        .save-message.show { opacity:1; }
+        .list-item { display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+        .list-item input { flex:1; }
+        .list-item .price-input { width:120px; flex:none; }
+        .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; margin-top:15px; }
+        .gallery-preview { position:relative; border-radius:8px; overflow:hidden; height:120px; border:1px solid var(--border); }
+        .gallery-preview img { width:100%; height:100%; object-fit:cover; }
+        .gallery-preview button { position:absolute; top:5px; right:5px; }
+        .field-hint { font-size:0.8rem; color:#94a3b8; margin-top:4px; display:flex; align-items:center; gap:6px; }
+        .field-hint i { color:var(--primary); }
+        .room-box { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:15px; margin-bottom:12px; }
+        .room-box h4 { font-size:0.95rem; color:var(--dark); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+        .room-box .form-group { margin-bottom:10px; }
+        .room-box .form-group:last-child { margin-bottom:0; }
+        .room-box .form-group label { font-size:0.8rem; margin-bottom:4px; color:#64748b; }
+        .img-preview { margin-top:10px; border-radius:10px; overflow:hidden; border:1px solid var(--border); max-height:200px; background:#f1f5f9; }
+        .img-preview img { width:100%; height:200px; object-fit:cover; display:block; }
+        .img-preview .placeholder { display:flex; align-items:center; justify-content:center; height:200px; color:#94a3b8; font-size:0.85rem; flex-direction:column; gap:10px; }
+        .img-preview .placeholder i { font-size:2.5rem; opacity:0.5; }
+        .img-preview-room { margin-top:8px; border-radius:8px; overflow:hidden; border:1px solid var(--border); max-height:120px; background:#f1f5f9; }
+        .img-preview-room img { width:100%; height:120px; object-fit:cover; display:block; }
+        .img-preview-room .placeholder { display:flex; align-items:center; justify-content:center; height:120px; color:#94a3b8; font-size:0.8rem; flex-direction:column; gap:6px; }
+        .img-preview-room .placeholder i { font-size:1.8rem; opacity:0.5; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1><i class="fa-solid fa-gauge-high" style="color:var(--primary)"></i> Panel de Control - <span id="hotelNameHeader">The Oruro inn</span></h1>
+        <div class="user-info" style="display:flex; align-items:center; gap:10px; font-weight:600;">
+            <i class="fa-solid fa-circle-user"></i> Administrador
+        </div>
+    </header>
+
+    <div class="container">
+        <main class="main-content active" id="mainContent">
+            <div class="card">
+                <h2><i class="fa-solid fa-hotel"></i> Información Básica</h2>
+                <div class="grid-2">
+                    <div class="form-group"><label for="inp_name">Nombre del Negocio</label><input type="text" id="inp_name"></div>
+                    <div class="form-group"><label for="inp_phone">Teléfono (WhatsApp)</label><input type="text" id="inp_phone"></div>
+                </div>
+                <div class="form-group"><label for="inp_address">Dirección</label><input type="text" id="inp_address"></div>
+                <div class="form-group"><label for="inp_mainImage">URL Imagen Principal (Banner)</label><input type="text" id="inp_mainImage" placeholder="https://..." oninput="previewMainImage()"></div>
+                <div id="previewMainImage" class="img-preview" style="display:none">
+                    <img src="" alt="Vista previa" style="display:none">
+                    <div class="placeholder"><i class="fa-solid fa-image"></i><span>Vista previa de la imagen principal</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-bed"></i> Tarifas y Habitaciones</h2>
+                <div id="roomsContainer"></div>
+                <button class="btn btn-secondary" onclick="addRoom()"><i class="fa-solid fa-plus"></i> Añadir Habitación</button>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-concierge-bell"></i> Servicios Destacados</h2>
+                <div id="amenitiesContainer"></div>
+                <button class="btn btn-secondary" onclick="addAmenity()"><i class="fa-solid fa-plus"></i> Añadir Servicio</button>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-images"></i> Galería de Imágenes</h2>
+                <p class="field-hint" style="margin-bottom:15px;"><i class="fa-solid fa-info-circle"></i> Estas imágenes se muestran en la sección "Nuestras Instalaciones"</p>
+                <div class="form-group">
+                    <label for="newImageUrl">Agregar nueva URL de imagen:</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="newImageUrl" placeholder="https://...">
+                        <button class="btn btn-primary" onclick="addImage()">Agregar</button>
+                    </div>
+                </div>
+                <div class="gallery-grid" id="galleryContainer"></div>
+            </div>
+
+            <div style="height:80px"></div>
+        </main>
+    </div>
+
+    <div class="save-bar">
+        <div>
+            Viendo sitio web: <a id="viewSiteLink" href="/site/the-oruro-inn/" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir página pública</a>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span class="save-message" id="saveMsg"><i class="fa-solid fa-circle-check"></i> ¡Sitio web regenerado y actualizado!</span>
+            <button class="btn btn-primary" onclick="saveData()"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios y Publicar</button>
+        </div>
+    </div>
+
+    <script>
+        const CURRENT_SLUG = 'the-oruro-inn';
+        const INITIAL_DATA = {"name":"The Oruro inn","address":"Huajara lll ,Manzano B,lote 16","phone":"59125256428","rating":null,"reviews":null,"amenities":["Wi-Fi de Alta Velocidad","Desayuno Incluido","Parqueo Privado"],"testimonials":[{"text":"Excelente atención y ubicación. Las habitaciones estaban muy limpias y cómodas. Totalmente recomendado.","stars":5,"author":"Carlos M."},{"text":"Un lugar muy acogedor para descansar. Relación calidad-precio inmejorable. Volveremos pronto.","stars":5,"author":"Laura G."},{"text":"El personal fue muy amable y nos ayudó con todo. Todo perfecto durante nuestra estadía.","stars":4,"author":"Fernando R."}],"prices":[{"image":"","price":"Bs. 120","type":"Habitación Simple"},{"image":"","price":"Bs. 200","type":"Habitación Doble"},{"image":"","price":"Bs. 350","type":"Habitación Familiar"}],"images":["https://lh3.googleusercontent.com/gps-cs-s/APNQkAHy0B8dPXU5zAeTkDmxPQIxutwH1Cel1y2DomSYNpCUeYUzynHT8Yesov5ch5DfRPZHwLITLLEOartv0UGSObEEQe06s-9CkddhlwaOMLT5k8Xf9H91k6NSuDtqG-LAV8mXI-Ft7g=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAHy0B8dPXU5zAeTkDmxPQIxutwH1Cel1y2DomSYNpCUeYUzynHT8Yesov5ch5DfRPZHwLITLLEOartv0UGSObEEQe06s-9CkddhlwaOMLT5k8Xf9H91k6NSuDtqG-LAV8mXI-Ft7g=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAEZMUrOaKmBP7gJFovGrRsLYgaCGhD4PIj7dtEroDlaxEH-crj55-YsfbaQo6zFwS-xoSnGLY-928hs72CGDf7b_CcMuB93SI122eTRaecnG3ZZGQKR1JoKlUfNxtAdCr52nmGnBA=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAHwowiC8kWLKSMD1Yz0tCyLgo4zl73aBl8SXzxia5kSmS0Nn_wO6w1cD-NbA3-6KiSEbL06XKDFfKeUTTuGNqHNSExa9aOYvpYa2Lz5Xc8LLSeTbxBM_jYhorsSeoHb_uv4E-ZOTgIF0CxT=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAH9VROGZBSfhFiv9YDZjdIQGUWp35KK-UGeBFFyr2gq_lbMuvO33cb3uXHJ5pUh5m8gG7CIkGJYbv72jOD-pIuYSFZRLdeYAErLKgN9-wgyePkK3qHMa6Y7oMf4CXDyKm1Wq69B=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAHSXawngeke_6XFXZZV74tFEmIdyTu1fIlSMJB4ZQPlX9N32pN5Np007-Tu4na2EJlK9CDX31EEouWiSY4MQHL0kwXnkRhgLZ-afFRQlRdnyZ6yfcB4XUFZ3qxra4DBHFy3HoSc=w800-h600-k-no","https://lh3.googleusercontent.com/gps-cs-s/APNQkAFXFkPmVrr-v7YhQRlUeNX0oYi7Zr6zrgwrQM1HDdVmUSmuwm6r9KPzfaW9QKXbP9XNiWfvhWapQsozCAxTaMLhMNiFQpXOnSdx9Eno71Rr82zQLYneodqb_P4ysNKX7LNPPg5YxuEmPlQ9=w800-h600-k-no"],"mainImage":"https://lh3.googleusercontent.com/gps-cs-s/APNQkAHy0B8dPXU5zAeTkDmxPQIxutwH1Cel1y2DomSYNpCUeYUzynHT8Yesov5ch5DfRPZHwLITLLEOartv0UGSObEEQe06s-9CkddhlwaOMLT5k8Xf9H91k6NSuDtqG-LAV8mXI-Ft7g=w1920-h1080-k-no"};
+        let currentData = {};
+
+        window.onload = function() {
+            currentData = JSON.parse(JSON.stringify(INITIAL_DATA));
+            renderForm();
+        };
+
+        function previewMainImage() {
+            const url = document.getElementById('inp_mainImage').value.trim();
+            const div = document.getElementById('previewMainImage');
+            const img = div.querySelector('img');
+            const ph = div.querySelector('.placeholder');
+            div.style.display = 'block';
+            if (url) {
+                ph.style.display = 'none';
+                img.style.display = 'block';
+                img.src = url;
+                img.onerror = function() { img.style.display='none'; ph.style.display='flex'; ph.querySelector('span').textContent = 'No se pudo cargar la imagen'; };
+                img.onload = function() { img.style.display='block'; ph.style.display='none'; };
+            } else {
+                img.style.display = 'none';
+                ph.style.display = 'flex';
+                ph.querySelector('span').textContent = 'Ingresa una URL para ver la vista previa';
+            }
+        }
+
+        function previewRoomImage(idx, url) {
+            const div = document.getElementById('previewRoom' + idx);
+            const img = div.querySelector('img');
+            const ph = div.querySelector('.placeholder');
+            url = url.trim();
+            if (url) {
+                ph.style.display = 'none';
+                img.style.display = 'block';
+                img.src = url;
+                img.onerror = function() { img.style.display='none'; ph.style.display='flex'; ph.querySelector('span').textContent = 'No se pudo cargar la imagen'; };
+                img.onload = function() { img.style.display='block'; ph.style.display='none'; };
+            } else {
+                img.style.display = 'none';
+                ph.style.display = 'flex';
+                ph.querySelector('span').textContent = 'URL de imagen de la habitación';
+            }
+        }
+
+        function renderForm() {
+            document.getElementById('inp_name').value = currentData.name || '';
+            document.getElementById('inp_phone').value = currentData.phone || '';
+            document.getElementById('inp_address').value = currentData.address || '';
+            document.getElementById('inp_mainImage').value = currentData.mainImage || '';
+            document.getElementById('hotelNameHeader').textContent = currentData.name || CURRENT_SLUG;
+            previewMainImage();
+            renderRooms();
+            renderAmenities();
+            renderGallery();
+        }
+
+        function renderRooms() {
+            const c = document.getElementById('roomsContainer');
+            c.innerHTML = '';
+            (currentData.prices || []).forEach((p, i) => {
+                const box = document.createElement('div');
+                box.className = 'room-box';
+                const h = document.createElement('h4');
+                h.innerHTML = '<i class="fa-solid fa-bed" style="color:var(--primary)"></i> Habitación ' + (i+1) + ' <button class="btn btn-danger" onclick="delRoom('+i+')"><i class="fa-solid fa-trash"></i> Eliminar</button>';
+                box.appendChild(h);
+
+                const g1 = document.createElement('div'); g1.className = 'form-group';
+                g1.innerHTML = '<label for="room_type_'+i+'">Nombre / Tipo</label><input id="room_type_'+i+'" type="text" placeholder="Ej: Habitación Doble" value="' + (p.type||'') + '">';
+                g1.querySelector('input').onchange = function() { udRoom(i, 'type', this.value); };
+                box.appendChild(g1);
+
+                const g2 = document.createElement('div'); g2.className = 'form-group';
+                g2.innerHTML = '<label for="room_price_'+i+'">Precio por noche</label><input id="room_price_'+i+'" type="text" placeholder="Ej: Bs. 150" value="' + (p.price||'') + '">';
+                g2.querySelector('input').onchange = function() { udRoom(i, 'price', this.value); };
+                box.appendChild(g2);
+
+                const g3 = document.createElement('div'); g3.className = 'form-group';
+                const effImg = p.image || (currentData.images && currentData.images[i]) || currentData.mainImage || '';
+                g3.innerHTML = '<label for="room_img_'+i+'">URL de imagen</label><input id="room_img_'+i+'" type="text" placeholder="https://..." value="' + effImg + '">';
+                g3.querySelector('input').onchange = function() { udRoom(i, 'image', this.value); };
+                g3.querySelector('input').oninput = function() { previewRoomImage(i, this.value); };
+                box.appendChild(g3);
+
+                const pd = document.createElement('div');
+                pd.className = 'img-preview-room'; pd.id = 'previewRoom' + i;
+                pd.innerHTML = '<img src="" alt="" style="display:none"><div class="placeholder"><i class="fa-solid fa-image"></i><span>' + (effImg ? 'Cargando...' : 'URL de imagen') + '</span></div>';
+                box.appendChild(pd);
+
+                c.appendChild(box);
+                if (effImg) previewRoomImage(i, effImg);
+            });
+        }
+        function udRoom(i,f,v) { if(!currentData.prices)currentData.prices=[]; currentData.prices[i][f]=v; }
+        function addRoom() { if(!currentData.prices)currentData.prices=[]; currentData.prices.push({type:'Nueva Habitación',price:'Bs. 0',image:''}); renderRooms(); }
+        function delRoom(i) { currentData.prices.splice(i,1); renderRooms(); }
+
+        function renderAmenities() {
+            const c = document.getElementById('amenitiesContainer');
+            c.innerHTML = '';
+            (currentData.amenities || []).forEach((a, i) => {
+                const d = document.createElement('div');
+                d.className = 'list-item';
+                d.innerHTML = '<input type="text" id="amenity_'+i+'" value="' + a + '" placeholder="Ej: WiFi gratuito"><button class="btn btn-danger" onclick="delAmenity('+i+')"><i class="fa-solid fa-trash"></i></button>';
+                d.querySelector('input').onchange = function() { udAmenity(i, this.value); };
+                c.appendChild(d);
+            });
+        }
+        function udAmenity(i,v) { currentData.amenities[i]=v; }
+        function addAmenity() { if(!currentData.amenities)currentData.amenities=[]; currentData.amenities.push('Nuevo Servicio'); renderAmenities(); }
+        function delAmenity(i) { currentData.amenities.splice(i,1); renderAmenities(); }
+
+        function renderGallery() {
+            const c = document.getElementById('galleryContainer');
+            c.innerHTML = '';
+            (currentData.images || []).forEach((img, i) => {
+                const d = document.createElement('div');
+                d.className = 'gallery-preview';
+                d.innerHTML = '<img src="' + img + '" alt=""><button class="btn btn-danger" onclick="delImage('+i+')"><i class="fa-solid fa-trash"></i></button>';
+                c.appendChild(d);
+            });
+        }
+        function addImage() { const inp = document.getElementById('newImageUrl'); if(inp.value.trim()) { if(!currentData.images)currentData.images=[]; currentData.images.push(inp.value.trim()); inp.value=''; renderGallery(); } }
+        function delImage(i) { currentData.images.splice(i,1); renderGallery(); }
+
+        async function saveData() {
+            currentData.name = document.getElementById('inp_name').value;
+            currentData.phone = document.getElementById('inp_phone').value;
+            currentData.address = document.getElementById('inp_address').value;
+            currentData.mainImage = document.getElementById('inp_mainImage').value;
+            try {
+                const btn = document.querySelector('.save-bar .btn-primary');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+                const res = await fetch('/api/save/' + CURRENT_SLUG, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(currentData) });
+                const result = await res.json();
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios y Publicar';
+                document.getElementById('hotelNameHeader').textContent = currentData.name;
+                if(result.success) { document.getElementById('saveMsg').classList.add('show'); setTimeout(() => document.getElementById('saveMsg').classList.remove('show'), 3000); }
+                else { alert('Error: ' + result.error); }
+            } catch(e) { alert('Error de conexión'); }
+        }
+    </script>
+</body>
+</html>
