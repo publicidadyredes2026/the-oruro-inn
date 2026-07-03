@@ -81,6 +81,7 @@
             <h1><i class="fa-solid fa-gauge-high" style="color:var(--primary)"></i> Panel de Control - <span id="hotelNameHeader">The Oruro inn</span></h1>
             <div style="display:flex; align-items:center; gap:15px;">
                 <span style="font-weight:600;font-size:0.9rem;"><i class="fa-solid fa-circle-user"></i> Administrador</span>
+                <button class="btn btn-secondary" onclick="resetToken()" style="padding:6px 12px;font-size:0.8rem;" title="Cambiar token de GitHub"><i class="fa-solid fa-key"></i></button>
                 <button class="btn btn-secondary" onclick="logout()" style="padding:6px 12px;font-size:0.8rem;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
             </div>
         </header>
@@ -143,6 +144,8 @@
 
     <script>
         const ADMIN_PASSWORD = 'oruro2026';
+        const GITHUB_USER = 'publicidadyredes2026';
+        const GITHUB_REPO = 'the-oruro-inn';
         let currentData = {};
         let dataLoaded = false;
 
@@ -171,6 +174,13 @@
             document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('loginPassword').value = '';
+        }
+
+        function resetToken() {
+            if (confirm('¿Resetear el token de GitHub? Necesitarás ingresarlo de nuevo al guardar.')) {
+                localStorage.removeItem('github_token');
+                alert('Token eliminado. Se te pedirá de nuevo al guardar.');
+            }
         }
 
         function previewMainImage() {
@@ -295,28 +305,67 @@
             currentData.phone = document.getElementById('inp_phone').value;
             currentData.address = document.getElementById('inp_address').value;
             currentData.mainImage = document.getElementById('inp_mainImage').value;
+
+            let githubToken = localStorage.getItem('github_token');
+            if (!githubToken) {
+                githubToken = prompt('Ingresa tu GitHub Token Personal:');
+                if (!githubToken) return;
+                localStorage.setItem('github_token', githubToken);
+            }
+
             try {
                 const btn = document.querySelector('.save-bar .btn-primary');
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
-                const res = await fetch('/.netlify/functions/save-data', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({
-                        password: ADMIN_PASSWORD,
-                        data: currentData
+                document.getElementById('saveMsg').classList.remove('show');
+
+                const fileUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
+                const headers = {
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'admin-panel'
+                };
+
+                const getRes = await fetch(fileUrl, { headers });
+                if (!getRes.ok) {
+                    const errData = await getRes.json();
+                    if (getRes.status === 401) {
+                        localStorage.removeItem('github_token');
+                        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios y Publicar';
+                        alert('Token inválido o expirado. Ve a GitHub > Settings > Developer Settings > Personal Access Tokens y crea uno nuevo con scope "repo".');
+                        return;
+                    }
+                    throw new Error(errData.message || 'Error al obtener archivo');
+                }
+                const fileInfo = await getRes.json();
+                const sha = fileInfo.sha;
+
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(currentData, null, 2))));
+
+                const putRes = await fetch(fileUrl, {
+                    method: 'PUT',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'Actualización desde panel admin',
+                        content: content,
+                        sha: sha,
+                        committer: { name: 'Admin Panel', email: 'admin@theoruroinn.netlify.app' }
                     })
                 });
-                const result = await res.json();
+
+                const putResult = await putRes.json();
                 btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios y Publicar';
                 document.getElementById('hotelNameHeader').textContent = currentData.name;
-                if(result.success) {
+
+                if (putRes.ok) {
+                    document.getElementById('saveMsg').textContent = '¡Datos guardados en GitHub! El sitio se actualizará en 1-2 min.';
                     document.getElementById('saveMsg').classList.add('show');
-                    setTimeout(() => document.getElementById('saveMsg').classList.remove('show'), 5000);
+                    setTimeout(() => document.getElementById('saveMsg').classList.remove('show'), 6000);
                 } else {
-                    alert('Error: ' + result.error);
+                    throw new Error(putResult.message || 'Error al guardar');
                 }
             } catch(e) {
-                alert('Error de conexión: ' + e.message);
+                document.querySelector('.save-bar .btn-primary').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios y Publicar';
+                alert('Error: ' + e.message);
             }
         }
     </script>
