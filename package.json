@@ -1,8 +1,5 @@
 {
   "name": "the-oruro-inn",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "node build.js"
-  }
+  "private": true
 }
