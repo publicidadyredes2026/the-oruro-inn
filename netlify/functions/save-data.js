@@ -5,7 +5,6 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const GITHUB_USER = 'publicidadyredes2026';
   const GITHUB_REPO = 'the-oruro-inn';
@@ -14,7 +13,7 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
     const { password, data } = body;
 
-    if (password !== ADMIN_PASSWORD) {
+    if (password !== 'oruro2026') {
       return { statusCode: 401, body: JSON.stringify({ error: 'Contraseña incorrecta' }) };
     }
 
